@@ -1,0 +1,147 @@
+import processing.serial.*;
+Serial myPort;
+
+PImage maze;
+int x = 25;
+int y = 125;
+int moveX = 0;
+int moveY = 0;
+int shiftX = 0;
+int shiftY = 0;
+PFont f;
+String val;
+
+void setup() {
+  size(400,400,P2D);
+  myPort  =  new Serial (this, Serial.list()[3],  9600); // Set the com port and the baud rate according to the Arduino IDE
+  myPort.bufferUntil('\n');
+
+
+  maze = loadImage("maze.png");
+  frameRate(10); 
+  textureMode(IMAGE);
+  textureWrap(REPEAT);
+
+}
+
+void draw() {
+  background(255);
+
+  beginShape();
+  texture(maze);
+  vertex(0, 0, 0+shiftX, 0+shiftY);
+  vertex(400, 0, 400+shiftX, 0+shiftY);
+  vertex(400, 400, 400+shiftX, 400+shiftY);
+  vertex(0, 400, 0+shiftX, 400+shiftY);
+  endShape();
+  
+  fill(255,0,0);
+  noStroke();
+  float touch = red(get(x,y));
+  ellipse(x,y,40,40);
+  if(touch < 255){
+    x=25;
+    y=125;
+    shiftX=0;
+    shiftY=0;
+      
+    myPort.write('0');
+    delay(300);
+  }
+  else if (x==375){
+    myPort.write('2');
+    
+    textSize(45);
+    textAlign(CENTER);
+    fill(255,0,0);
+    text("YOU WIN!", width/2, height/2);
+  }
+  else {
+    myPort.write('1');
+    
+  }
+  
+
+  if (moveY==-1) {
+    float touch1 = red(get(x,y-50));
+    if (touch1 <255){
+      x=25;
+      y=125;
+      shiftX=0;
+      shiftY=0;
+      
+      myPort.write('0');
+      delay(300);
+    }
+    else {
+      y=y-50;
+      shiftY = shiftY - 50;
+      delay(300);
+    }
+  }
+  else if (moveY==1) {
+    float touch2 = red(get(x,y+50));
+    if (touch2 <255){
+      x=25;
+      y=125;
+      shiftX=0;
+      shiftY=0;
+      
+      myPort.write('0');
+      delay(300);
+    }
+    else {
+      y=y+50;
+      shiftY = shiftY + 50;
+      delay(300);
+
+    }
+
+  }
+  
+  if (moveX==-1) {
+    float touch3 = red(get(x-50,y));
+    if (touch3 <255){
+      x=25;
+      y=125;
+      shiftX=0;
+      shiftY=0;
+    
+      myPort.write('0');
+      delay(300);
+
+    }
+    else {
+      x=x-50;
+      shiftX = shiftX - 50;
+      delay(300);
+    }
+  }
+  else if (moveX==1) {
+    float touch4 = red(get(x+50,y));
+    if (touch4 <255){
+      x=25;
+      y=125;
+      shiftX=0;
+      shiftY=0;
+      delay(300);
+      
+      myPort.write('0');
+    }
+    else {
+      x=x+50;
+      shiftX = shiftX + 50;
+      delay(300);
+    }
+  }
+}
+
+void serialEvent (Serial myPort){
+  val = myPort.readStringUntil('\n');
+  if (val != null){
+    val = trim(val);
+    int [] vals = int(splitTokens(val, ","));
+    moveX = vals[0];
+    moveY = vals[1];
+  }
+}
